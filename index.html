@@ -167,6 +167,14 @@ h1 {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .error { color: #c62828; }
+
+.notice {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #555;
+  margin-bottom: 20px;
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -177,6 +185,7 @@ h1 {
     <div class="dropdown" id="dropdown"></div>
   </div>
   <div id="status"><span class="loading-spinner"></span> טוען נתונים...</div>
+  <div class="notice" id="notice"></div>
   <div class="result" id="result">
     <div class="result-header">
       <div class="result-name" id="resultName"></div>
@@ -240,7 +249,13 @@ async function fetchData() {
     const rows = parseCSV(text);
     parseData(rows);
     statusEl.style.display = 'none';
-    document.getElementById('search').focus();
+    const saved = localStorage.getItem('lastName');
+    if (saved && congregants[saved]) {
+      searchEl.value = saved;
+      showResult(saved);
+    } else {
+      searchEl.focus();
+    }
   } catch (e) {
     statusEl.innerHTML = '<span class="error">שגיאה בטעינת הנתונים. נסה לרענן את הדף.</span>';
     console.error(e);
@@ -254,6 +269,7 @@ function parseData(rows) {
   // Group by name client-side, compute balance as sum of transactions
 
   const map = {}; // name → { transactions[], totalBalance }
+  let lastBankTransferDate = '';
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -267,6 +283,11 @@ function parseData(rows) {
 
     // Skip header and empty rows
     if (!name || name === 'שם מתפלל') continue;
+
+    // Track last bank transfer date
+    if (type === 'תשלום נדרים (העברה בנקאית)') {
+      lastBankTransferDate = occasion;
+    }
 
     if (!map[name]) map[name] = { transactions: [], totalBalance: 0 };
 
@@ -283,6 +304,13 @@ function parseData(rows) {
       paid: paidNum,
       balance: balanceNum
     });
+  }
+
+  // Show bank transfer notice
+  if (lastBankTransferDate) {
+    const noticeEl = document.getElementById('notice');
+    noticeEl.textContent = `*העברות בנקאיות עודכנו לאחרונה בתאריך ${lastBankTransferDate}. אם ידוע לך על תשלומים שבוצעו לאחר מכן - הם עדיין לא עודכנו!`;
+    noticeEl.style.display = 'block';
   }
 
   for (const [name, data] of Object.entries(map)) {
@@ -353,6 +381,7 @@ function selectName(name) {
   searchEl.value = name;
   hideDropdown();
   showResult(name);
+  try { localStorage.setItem('lastName', name); } catch(e) {}
 }
 
 document.addEventListener('click', (e) => {

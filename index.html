@@ -175,11 +175,99 @@ h1 {
   margin-bottom: 20px;
   display: none;
 }
+
+.pledge-btn {
+  display: block;
+  margin: 0 auto 20px;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #1a237e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.pledge-btn:hover { background: #283593; }
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal-overlay.open { display: flex; }
+
+.modal {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 420px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #999;
+  cursor: pointer;
+}
+
+.modal h2 {
+  font-size: 1.2rem;
+  color: #1a237e;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.modal-details {
+  font-size: 1rem;
+  line-height: 1.8;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.modal-details .account-number {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.copy-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #2e7d32;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.copy-btn:hover { background: #388e3c; }
+.copy-btn.copied { background: #1b5e20; }
 </style>
 </head>
 <body>
 <div class="container">
   <h1>בית כנסת שיר חדש</h1>
+  <button class="pledge-btn" id="pledgeBtn">תשלום נדרים</button>
   <div class="search-wrapper">
     <input type="text" id="search" placeholder="הקלד שם לחיפוש..." autocomplete="off">
     <div class="dropdown" id="dropdown"></div>
@@ -196,6 +284,22 @@ h1 {
       <h3>פירוט עסקאות</h3>
       <div id="txBody"></div>
     </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pledgeModal">
+  <div class="modal">
+    <button class="modal-close" id="modalClose" aria-label="סגור">&times;</button>
+    <h2>תשלום נדרים</h2>
+    <div class="modal-details">
+      חשבון בנק של בית הכנסת לתשלום נדרים:<br>
+      בנק מרכנתיל 17<br>
+      סניף 740 יהודה הנשיא<br>
+      חשבון <span class="account-number">95530594</span><br>
+      על שם: ״אור מהלב ככה זה כשאוהבים״<br><br>
+      נא לציין בפרטים את שמכם ו/או טלפון לזיהוי
+    </div>
+    <button class="copy-btn" id="copyBtn">העתק מספר חשבון</button>
   </div>
 </div>
 
@@ -426,6 +530,43 @@ function showResult(name) {
 
   resultEl.style.display = 'block';
 }
+
+// Pledge payment modal
+const pledgeBtn = document.getElementById('pledgeBtn');
+const pledgeModal = document.getElementById('pledgeModal');
+const modalClose = document.getElementById('modalClose');
+const copyBtn = document.getElementById('copyBtn');
+
+pledgeBtn.addEventListener('click', () => pledgeModal.classList.add('open'));
+modalClose.addEventListener('click', () => pledgeModal.classList.remove('open'));
+pledgeModal.addEventListener('click', (e) => {
+  if (e.target === pledgeModal) pledgeModal.classList.remove('open');
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') pledgeModal.classList.remove('open');
+});
+
+copyBtn.addEventListener('click', async () => {
+  const accountNumber = '95530594';
+  try {
+    await navigator.clipboard.writeText(accountNumber);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = accountNumber;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  copyBtn.textContent = 'הועתק! ✓';
+  copyBtn.classList.add('copied');
+  setTimeout(() => {
+    copyBtn.textContent = 'העתק מספר חשבון';
+    copyBtn.classList.remove('copied');
+  }, 2000);
+});
 
 fetchData();
 </script>

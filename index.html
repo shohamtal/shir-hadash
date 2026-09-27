@@ -366,6 +366,11 @@ async function fetchData() {
   }
 }
 
+// Sheet exports amounts >= 1000 with thousands separators ("1,150")
+function parseAmount(s) {
+  return parseFloat(s.replace(/,/g, '')) || 0;
+}
+
 function parseData(rows) {
   // Ungrouped sheet columns:
   // 0=מס' (num), 1=מועד (occasion), 2=קניה (type), 3=נדר (pledge),
@@ -395,9 +400,9 @@ function parseData(rows) {
 
     if (!map[name]) map[name] = { transactions: [], totalBalance: 0 };
 
-    const pledgeNum = parseFloat(pledge) || 0;
-    const paidNum = parseFloat(paid) || 0;
-    const balanceNum = parseFloat(balance) || 0;
+    const pledgeNum = parseAmount(pledge);
+    const paidNum = parseAmount(paid);
+    const balanceNum = parseAmount(balance);
 
     map[name].totalBalance += balanceNum;
     map[name].transactions.push({
